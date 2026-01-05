@@ -11,6 +11,7 @@ class GA_GUI:
     def __init__(self, root):
         self.root = root
         self.root.title("GA Inverted Pendulum Optimization")
+        self.root.iconbitmap("logo.png")
         self.root.geometry("900x700") 
         
         self.optimizer = OptimizerApp()
@@ -33,7 +34,7 @@ class GA_GUI:
 
         # Logo
         try:
-            self.logo_img = tk.PhotoImage(file="logo_resized.png")
+            self.logo_img = tk.PhotoImage(file="logo.png")
             logo_label = ttk.Label(top_frame, image=self.logo_img)
             logo_label.pack(side="left", padx=10)
         except Exception:
