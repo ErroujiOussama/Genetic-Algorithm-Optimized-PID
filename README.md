@@ -3,6 +3,11 @@
 
 This repository provides a robust framework for optimizing **Dual PID controllers** to stabilize an inverted pendulum on a cart. It leverages **Genetic Algorithms (GA)** to automatically tune six PID gains (Proportional, Integral, Derivative for both Angle and Position control loops) simultaneously, ensuring optimal stability and minimal control effort. The system is simulated using the high-performance **MuJoCo** physics engine.
 
+![alt text]({assets/GUI.png})
+
+![alt text]({assets/Mujovo_screenshot.png})
+
+
 ## Package Structure
 
 The project is organized into modular components to separate concerns between the GUI, optimization logic, and simulation control.
