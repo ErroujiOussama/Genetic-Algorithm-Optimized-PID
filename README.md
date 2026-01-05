@@ -23,8 +23,8 @@ The project is organized into modular components to separate concerns between th
 
 1.  **Clone the repository**:
     ```bash
-    git clone <repository_url>
-    cd <repository_name>
+    git clone https://github.com/ErroujiOussama/Genetic-Algorithm-Optimized-PID.git
+    cd Genetic-Algorithm-Optimized-PID
     ```
 
 2.  **Install dependencies**:
