@@ -1,0 +1,9 @@
+values_golden = [0.85, 0.01, 0.04]
+values_aggressive = [0.70, 0.10, 0.04]
+
+#Index 0 (Crossover): Probability of mixing parents.
+#Index 1 (Mutation): Probability of random gene changes.
+#Index 2 (Elitism): Fraction of population kept as top survivors.
+
+
+They do not sum to 100% because they control independent stages of the algorithm, not a single distribution of "what happens to a person."Here is the breakdown of why they are separate:Elitism ($4\%$): This is a Quantity.It says: "Take the top 4% of the population and copy them directly to the next generation."(e.g., In a population of 50, you save the top 2).Crossover ($85\%$): This is a Probability for the Rest.For the remaining 48 spots, you pick parents. The rate asks: "Should these parents mix genes?"If Yes (85%): They make a new child mixed from both.If No (15%): One parent effectively clones itself.Mutation ($1\%$): This is a Probability applied AFTER.Once a child is born (whether from Crossover or Cloning), you roll a dice again.It asks: "Should we randomly tweak this child?"This happens independently. A child can be the result of Crossover AND Mutation.
