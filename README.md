@@ -5,7 +5,7 @@ This repository provides a robust framework for optimizing **Dual PID controller
 
 ![alt text](assets/GUI.png)
 
-![alt text](assets/Mujovo_screenshot.png)
+![alt text](assets/Mujoco_screenshot.png)
 
 ## Package Structure
 
