@@ -17,7 +17,8 @@ class GA_GUI:
         self.optimizer = OptimizerApp()
         self.vis_queue = queue.Queue()
         self.vis_done_event = threading.Event()
-        self.plot_buffer = [] # Buffer for aggregated plotse
+        # self.plot_buffer = [] # Removed buffer
+
         self.is_training = False
         
         # Plot Data
@@ -157,11 +158,9 @@ class GA_GUI:
                 if self.show_responses_var.get():
                     self.show_response_plots(states, actions)
                 
-                # Buffer for saving
+                # Save directly
                 if self.save_results_var.get():
-                    self.plot_buffer.append((gen, states, actions))
-                    if len(self.plot_buffer) >= 10:
-                        self.save_aggregated_plot()
+                    self.save_generation_plot(gen, states, actions)
 
             self.vis_done_event.set()
             self.status_var.set("Resuming Training...")
@@ -208,103 +207,44 @@ class GA_GUI:
             top.destroy()
         top.protocol("WM_DELETE_WINDOW", on_close)
 
-    def save_aggregated_plot(self):
-        """Saves last 10 generations: 5x2 grid + Summary row."""
-        if not self.plot_buffer: return
+    def save_generation_plot(self, gen, states, actions):
+        """Saves a single generation's response at 200 DPI."""
+        # Create figure with 3 subplots
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(6, 8), sharex=True)
         
-        start_gen = self.plot_buffer[0][0]
-        end_gen = self.plot_buffer[-1][0]
+        t = np.arange(len(states)) * 0.01 
         
-        # Increase figure size to accommodate more subplots
-        fig = plt.figure(figsize=(20, 30)) 
+        # Position
+        ax1.plot(t, states[:, 0], label="Position", color="blue")
+        ax1.set_ylabel("Pos (m)")
+        ax1.set_title(f"Generation {gen} Response")
+        ax1.grid(True)
+        ax1.legend(loc="upper right")
         
-        # Main Grid: 6 rows (5 for gens, 1 for summary), 2 columns
-        # We need more height for the generation rows since they now hold 3 plots each
-        gs = fig.add_gridspec(6, 2, height_ratios=[3, 3, 3, 3, 3, 2])
+        # Angle
+        ax2.plot(t, states[:, 1], label="Angle", color="orange")
+        ax2.set_ylabel("Ang (rad)")
+        ax2.grid(True)
+        ax2.legend(loc="upper right")
         
-        # --- 1. Grid of 10 Individual Responses ---
-        for i, (gen, states, actions) in enumerate(self.plot_buffer):
-            row = i // 2
-            col = i % 2
-            
-            if row < 5:
-                # Create a sub-grid of 3 rows within this cell
-                gs_sub = gs[row, col].subgridspec(3, 1, hspace=0.1)
-                
-                ax_x = fig.add_subplot(gs_sub[0])
-                ax_th = fig.add_subplot(gs_sub[1], sharex=ax_x)
-                ax_u = fig.add_subplot(gs_sub[2], sharex=ax_x)
-                
-                t = np.arange(len(states)) * 0.01
-                
-                # Position
-                ax_x.plot(t, states[:, 0], color="blue", label="Pos")
-                ax_x.set_ylabel("Pos (m)", fontsize=8)
-                ax_x.grid(True, alpha=0.3)
-                ax_x.tick_params(labelbottom=False) # Hide x labels for top plots
-                ax_x.set_title(f"Gen {gen}", fontsize=10, pad=2)
-                
-                # Angle
-                ax_th.plot(t, states[:, 1], color="orange", label="Ang")
-                ax_th.set_ylabel("Ang (rad)", fontsize=8)
-                ax_th.grid(True, alpha=0.3)
-                ax_th.tick_params(labelbottom=False)
-                
-                # Effort
-                ax_u.plot(t, actions, color="green", label="Force")
-                ax_u.set_ylabel("Force (N)", fontsize=8)
-                ax_u.grid(True, alpha=0.3)
-                
-                # Only show Legend on the very first cell to reduce clutter? 
-                # Or small legend on all? separate plots mean separate contexts.
-                # Let's put a small legend on each.
-                # ax_x.legend(loc='upper right', fontsize='xx-small')
+        # Effort
+        ax3.plot(t, actions, label="Effort", color="green")
+        ax3.set_ylabel("Force (N)")
+        ax3.set_xlabel("Time (s)")
+        ax3.grid(True)
+        ax3.legend(loc="upper right")
+        
+        # Save
+        filename = f"results/gen_{gen}.png"
+        try:
+            fig.savefig(filename, dpi=200, bbox_inches='tight')
+        except Exception as e:
+            print(f"Error saving generation plot: {e}")
+        finally:
+            plt.close(fig)
 
-        # --- 2. Summary Row (Row 5) ---
-        # Spans both columns? Or just separate?
-        # Let's make the summary region span the whole bottom
-        
-        gs_summary = gs[5, :].subgridspec(1, 3)
-        
-        ax_sum_x = fig.add_subplot(gs_summary[0])
-        ax_sum_th = fig.add_subplot(gs_summary[1])
-        ax_sum_u = fig.add_subplot(gs_summary[2])
-        
-        cmap = plt.get_cmap("viridis")
-        
-        for i, (gen, states, actions) in enumerate(self.plot_buffer):
-            t = np.arange(len(states)) * 0.01
-            color = cmap(i / len(self.plot_buffer))
-            alpha = 0.5 + (0.5 * (i / len(self.plot_buffer)))
-            
-            label = f"G{gen}" if (i==0 or i==9) else None
-            
-            ax_sum_x.plot(t, states[:, 0], color=color, alpha=alpha, label=label)
-            ax_sum_th.plot(t, states[:, 1], color=color, alpha=alpha, label=label)
-            ax_sum_u.plot(t, actions, color=color, alpha=alpha, label=label)
-            
-        ax_sum_x.set_title("Summary: Position")
-        ax_sum_x.set_xlabel("Time (s)")
-        ax_sum_x.grid(True)
-        ax_sum_x.legend(fontsize='x-small')
-        
-        ax_sum_th.set_title("Summary: Angle")
-        ax_sum_th.set_xlabel("Time (s)")
-        ax_sum_th.grid(True)
-        
-        ax_sum_u.set_title("Summary: Effort")
-        ax_sum_u.set_xlabel("Time (s)")
-        ax_sum_u.grid(True)
-
-        fig.suptitle(f"Analysis Gen {start_gen}-{end_gen}", fontsize=16)
-        # plt.tight_layout() # distinct subgridspecs often fight with tight_layout
-        
-        filename = f"results/analysis_gens_{start_gen}_{end_gen}.png"
-        fig.savefig(filename, bbox_inches='tight', dpi=1000) # Use bbox_inches to handle layout
-        plt.close(fig)
-        
-        # Clear Buffer
-        self.plot_buffer = []
+        # Clear Buffer (Legacy placeholder if needed, effectively removed)
+        # self.plot_buffer = []
 
     def start_training(self):
         if self.is_training: return
